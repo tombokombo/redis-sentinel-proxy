@@ -1,8 +1,9 @@
 # Redis-Sentinel-Proxy
 
-Highly inspired by https://github.com/metal3d/redis-ellison/ , but smarter :)
+Highly inspired by https://github.com/metal3d/redis-ellison/ , but smarter :) You should read his description which fits this project. This incarnation is event based and testing redis to know if redis master is writable/ready to use.
 
 Proxy for apps using redis which for some reasons cannot interact with redis sentinels cluster.
+
 
 # Usage
 
