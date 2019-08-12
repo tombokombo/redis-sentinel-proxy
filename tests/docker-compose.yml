@@ -1,0 +1,120 @@
+version: '3.4'
+  
+networks:
+  redis-proxy-test-net:
+    driver: bridge
+
+services:
+  redis1: &redises
+    image: redis:3.2.8-alpine 
+    container_name: "${PREFIX}redis1"
+    volumes:
+        - ./configs/red_1.conf:/usr/local/etc/redis/redis.conf
+    command: &redis-command redis-server /usr/local/etc/redis/redis.conf 
+    ports:
+        - 6381:6379
+    networks:
+        - redis-proxy-test-net
+  redis2:
+    <<: *redises
+    container_name: "${PREFIX}redis2"
+    volumes:
+        - ./configs/red_2.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 6382:6379
+  redis3:
+    <<: *redises
+    container_name: "${PREFIX}redis3"
+    volumes:
+        - ./configs/red_3.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 6383:6379
+  redis4:
+    <<: *redises
+    container_name: "${PREFIX}redis4"
+    volumes:
+        - ./configs/red_4.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 6384:6379
+  redis5:
+    <<: *redises
+    container_name: "${PREFIX}redis5"
+    volumes:
+        - ./configs/red_5.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 6385:6379
+  sentinel1: &sentinels
+    image: redis:3.2.8-alpine 
+    container_name: "${PREFIX}sentinel1"
+    volumes:
+        - ./configs/sent_1.conf:/usr/local/etc/redis/redis.conf
+    command: &sentinel-command "redis-server /usr/local/etc/redis/redis.conf --sentinel"
+    ports:
+        - 26379:26379
+    networks:
+        - redis-proxy-test-net
+  sentinel2:
+    <<: *sentinels
+    container_name: "${PREFIX}sentinel2"
+    volumes:
+        - ./configs/sent_2.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 26380:26379
+  sentinel3:
+    <<: *sentinels
+    container_name: "${PREFIX}sentinel3"
+    volumes:
+        - ./configs/sent_3.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 26381:26379
+  sentinel4:
+    <<: *sentinels
+    container_name: "${PREFIX}sentinel4"
+    volumes:
+        - ./configs/sent_4.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 26382:26379
+  sentinel5:
+    <<: *sentinels
+    container_name: "${PREFIX}sentinel5"
+    volumes:
+        - ./configs/sent_5.conf:/usr/local/etc/redis/redis.conf
+    ports:
+        - 26383:26379
+  redis-sentinel-proxy:
+    build: ../src/
+    container_name: "${PREFIX}redis-sentinel-proxy"
+    #command: 'bash -c "sleep 2 && redis-sentinel-proxy"'
+    #command: 'bash -c "cd /go/src/project/;go run --race ."'
+    environment:
+        - LISTEN=0.0.0.0:6666
+        - VERBOSE=True
+        - SENTINELS=${PREFIX}sentinel1:26379
+        - LISTEN_PORT=6666
+        - DEBUG=True
+    ports:
+        - 6666:6666
+    depends_on:
+        - redis1
+        - redis2
+        - redis3
+        - redis4
+        - redis5
+        - sentinel1
+        - sentinel2
+        - sentinel3
+        - sentinel4
+        - sentinel5
+    networks:
+        - redis-proxy-test-net
+  client:
+    build: ./client/
+    container_name: "${PREFIX}client"
+    environment:
+      - REDIS_HOST=redis-sentinel-proxy
+      - DEADLINE=3000
+      - PRINT_JUST_ROUND=${PRINT_JUST_ROUND:-10000}
+    networks:
+      - redis-proxy-test-net
+    depends_on: 
+      - redis-sentinel-proxy
