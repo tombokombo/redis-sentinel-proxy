@@ -3,8 +3,8 @@ TESTDIR=tests
 
 [[ $# -eq 0 ]] && echo -e \
 "no params, args are test names [basic] [partition] [random] [all] and optional compose prefix\n\
-e.g ./start_tests.sh basic myprefix_\\
-exiting" && exit 0
+e.g ./start_tests.sh basic myprefix_
+starting basic test" && BASIC=True
 
 while (( "$#" )); do
   case "$1" in
@@ -39,10 +39,6 @@ export PREFIX=$1
 
 ( ! [ $EUID = 0 ] ) && SUDO="sudo -E" || SUDO=
 
-function getAddr() {
-
-    $SUDO docker-compose inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $1
-}
 
 function basic() {
     for i in `seq 1 5`;do 
@@ -55,11 +51,10 @@ function basic() {
 function random() {
     for i in `seq 1 200`;do
         rnd=$(($RANDOM%5+1))
-        addr=$(getAddr redis${rnd})
-        echo docker-compose kill redis${rnd} $addr
+        echo docker-compose kill redis${rnd}
         $SUDO docker-compose kill redis${rnd}
         sleep 5
-        echo docker-compose start redis${rnd} $addr
+        echo docker-compose start redis${rnd}
         $SUDO docker-compose start redis${rnd}
     done
 }
