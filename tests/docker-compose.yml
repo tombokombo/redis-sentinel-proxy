@@ -102,7 +102,7 @@ services:
       - REDIS_HOST=redis-sentinel-proxy
       - DEADLINE=3000
       - PRINT_JUST_ROUND=${PRINT_JUST_ROUND:-10000}
-      - INIT_SLEEP=10
+      - INIT_SLEEP=20
     networks:
       - redis-proxy-test-net
     depends_on: 
