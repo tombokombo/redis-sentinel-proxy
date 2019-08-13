@@ -19,7 +19,7 @@ Second terminal for running tests which will kill/start redis and sentinel insta
 ./start_tests.sh
 ```
 
-# example for all tests with containers names prefix
+## example for all tests with containers names prefix
 
 ```
 ./start_cluster.sh myprefix_
