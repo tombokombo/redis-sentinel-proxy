@@ -1,9 +1,10 @@
 #!/bin/bash
 TESTDIR=tests
+EXAMPLE="e.g ./start_tests.sh basic myprefix_"
 
 [[ $# -eq 0 ]] && echo -e \
 "no params, args are test names [basic] [partition] [random] [all] and optional compose prefix\n\
-e.g ./start_tests.sh basic myprefix_
+$EXAMPLE
 starting basic test" && BASIC=True
 
 while (( "$#" )); do
@@ -44,7 +45,7 @@ function basic() {
     for i in `seq 1 5`;do 
         $SUDO docker-compose kill redis${i};
         sleep 2;
-        $SUDO docker-compose start redis${i};
+        $SUDO docker-compose start redis${i} || exit 1;
         sleep 5;done
 }
 
@@ -55,7 +56,7 @@ function random() {
         $SUDO docker-compose kill redis${rnd}
         sleep 5
         echo docker-compose start redis${rnd}
-        $SUDO docker-compose start redis${rnd}
+        $SUDO docker-compose start redis${rnd} || exit 1;
     done
 }
 
@@ -69,9 +70,9 @@ function net_partitioning() {
                 action=start
                 (( $i % 2 )) && action=kill
                 echo docker-compose $action redis${j}
-                $SUDO docker-compose $action redis${j} &
+                $SUDO docker-compose $action redis${j} || exit 1
                 echo docker-compose $action sentinel${j}
-                $SUDO docker-compose $action sentinel${j}
+                $SUDO docker-compose $action sentinel${j} || exit 1
             done
             sleep 10
         done
@@ -97,3 +98,5 @@ if [ $ALL ]; then
     net_partitioning
     random
 fi
+
+[ ! $BASIC ] &&  [ ! $NET_PARTITIONING ] &&  [ ! $RAND ] && [ ! $ALL ] && echo "missing test arg $EXAMPLE"

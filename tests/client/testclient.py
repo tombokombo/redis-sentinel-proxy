@@ -8,6 +8,7 @@ import functools
 
 print = functools.partial(print, flush=True)
 
+INIT_SLEEP = int(os.environ.get("INIT_SLEEP",20))
 #40 min => 2400sec
 DEADLINE = int(os.environ.get("DEADLINE",2400))
 
@@ -37,7 +38,7 @@ def connect():
             r.set("test", TEST_VALUE)
             return r
         except Exception as e:
-            print("test failed",e)
+            print("test failed during connect",e)
             return None
         #init retry after sleep
         time.sleep(3)
@@ -56,33 +57,35 @@ def worker(procnum, q):
             retval = r.get("test")
             diff = time.time()-start
             if diff > 1 or retval != TEST_VALUE :
-                print("{0} took {1}s".format(retval,diff))
+                print("worker {0}: {1} took {2}s".format(procnum,retval,diff))
                 if retval is None or retval != TEST_VALUE :
-                    print("test failed")
+                    print("worker {0} test failed, redis returned=>".format(procnum),retval)
                     q.put(False)
                     return
             if cnt % PRINT_JUST_ROUND == 0 :
-                print("passed {0} rounds".format(cnt))
+                print("worker {0} passed {1} rounds".format(procnum,cnt))
         except redis.exceptions.ConnectionError as e:
             if "Connection closed" in str(e):
-                print("ConnectioError: {0} took {1}s".format(e,diff))
+                print("worker {0} ConnectioError: {1} took {2}s".format(procnum,e,diff))
                 continue
-            print("test failed",e)
+            print("worker {0} test failed".format(procnum),e)
             q.put(False)
             return
         except Exception as e:
-            print("test failed")
-            print("Exception: {0} took {1}s".format(e,diff))
+            print("worker {0} test failed".format(procnum))
+            print("worker {0} Exception: {0} took {1}s".format(procnum,e,diff))
             q.put(False)
             return
         if int(time.time() - overall_start) > DEADLINE:
-            print("deadline reached,worker {0}".format(procnum))
+            print("worker {0} deadline reached".format(procnum))
             return
         cnt += 1
 
 if __name__ == '__main__':
     q = Queue(maxsize=0)
     wrkrs = []
+    print("client sleep for {0}s to let redis/sentinel cluster settle down".format(INIT_SLEEP))
+    time.sleep(INIT_SLEEP)
     for i in range(10):
         p = Process(target=worker, args=(i,q))
         wrkrs.append(p)

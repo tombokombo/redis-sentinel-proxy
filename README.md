@@ -13,10 +13,20 @@ You will need two terminals, one running proxy and test client
 ```
 ./start_cluster.sh
 ```
-Second one running tests which will kill/start redis and sentinel instancies
+Second terminal for running tests which will kill/start redis and sentinel instancies, there are different test included, without arguments, script will run just basic test
 
 ```
 ./start_tests.sh
+```
+
+# example for all tests with containers names prefix
+
+```
+./start_cluster.sh myprefix_
+```
+
+```
+./start_tests.sh all myprefix_
 ```
 
 ## Build binary from source

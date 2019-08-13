@@ -5,10 +5,15 @@ CONF_DIR=${CONF_DIR:-./configs}
 TEMPL_DIR=${CONF_DIR}/templates
 
 TAIL=true
+MAKECONFIGS=false
 while (( "$#" )); do
   case "$1" in
     "notail")
       TAIL=false
+      shift
+      ;;
+    "makeconfigs")
+      MAKECONFIGS=true
       shift
       ;;
     *) # preserve positional arguments
@@ -28,11 +33,12 @@ trap ctrl_c INT
 function ctrl_c() {
     echo down AND exit
     sudo docker-compose down && exit 0
-    rm ./configs/*conf
+    rm ./configs/*conf 2>/dev/null
 }
 
 function prepare_configs() {
 
+    rm ./configs/*.conf 2>/dev/null
     for i in $(seq 1 5);do
         cp $CONF_DIR/templates/sentinel.tmpl $CONF_DIR/sent_$i.conf 
         cp $CONF_DIR/templates/redis.tmpl $CONF_DIR/red_$i.conf
@@ -46,6 +52,8 @@ function prepare_configs() {
 
 cd $TESTDIR
 prepare_configs
+
+if $MAKECONFIGS;then echo "only configs";exit 0;fi
 
 $SUDO docker-compose up -d --build
 
